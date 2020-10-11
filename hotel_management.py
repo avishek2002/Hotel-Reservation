@@ -13,6 +13,10 @@ from kivy.graphics import Color, Rectangle
 # from kivy.uix.widget import Widget
 from kivy.uix.screenmanager import ScreenManager, Screen 
 
+"""
+/usr/local/mysql/bin/mysql -u root -p
+"""
+
 
 # creating database if not exists
 def mysql():
