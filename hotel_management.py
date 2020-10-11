@@ -1,20 +1,20 @@
 import kivy
+# from kivy.lang import Builder
+# from kivy.base import runTouchApp
 from kivy.app import App
 from kivy.uix.label import Label
 # from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
+# from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 # from kivy.uix.layout import Layout
 from kivy.graphics import Color, Rectangle
 # from kivy.uix.widget import Widget
 from kivy.uix.screenmanager import ScreenManager, Screen 
-# from kivy.lang import Builder
-# from kivy.uix.scrollview import ScrollView
-# from kivy.base import runTouchApp
 
 
-# connector to mysql and the database part
+# creating database if not exists
 def mysql():
 
     """
@@ -74,7 +74,7 @@ def mysql():
         cursor.execute('alter table requested_rooms add(name varchar(25) not null);')
         cursor.execute('alter table requested_rooms add(check_in date not null);')
         cursor.execute('alter table requested_rooms add(check_out date not null);')
-
+        mycon.commit()
     else:
         print('hi')
 
@@ -482,20 +482,19 @@ class Createmember(Screen, FloatLayout):
                                        pos_hint={"x": 0.5, "top": 0.7})
         self.add_widget(self.phoneofmember)
 
+        self.email_label = MyLabel(text="Email", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                   pos_hint={"x": 0.15, "top": 0.6})
+        self.add_widget(self.email_label)
+        self.emailofmember = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                       pos_hint={"x": 0.5, "top": 0.6})
+        self.add_widget(self.emailofmember)
+
         self.pass_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                                  pos_hint={"x": 0.15, "top": 0.6})
+                                  pos_hint={"x": 0.15, "top": 0.5})
         self.add_widget(self.pass_label)
         self.passofmember = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                      pos_hint={"x": 0.5, "top": 0.6})
+                                      pos_hint={"x": 0.5, "top": 0.5})
         self.add_widget(self.passofmember)
-
-        self.pass2_label = MyLabel(text="Confirm password", font_size=40, color=(225, 225, 1, 1),
-                                        size_hint=(.35, .05),
-                                        pos_hint={"x": 0.15, "top": 0.5})
-        self.add_widget(self.pass2_label)
-        self.pass2ofmember = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                       pos_hint={"x": 0.5, "top": 0.5})
-        self.add_widget(self.pass2ofmember)
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
                            size_hint=(.15, .025), pos_hint={"x": 0.01, "top": .99})
@@ -504,12 +503,37 @@ class Createmember(Screen, FloatLayout):
 
         self.submit = Button(text="Done", font_size=40, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
                              size_hint=(.4, .15), pos_hint={"x": 0.3, "top": .3})
-        # self.submit.bind(on_release=self.call_home)
+        self.submit.bind(on_release=self.call_create_member)
         self.add_widget(self.submit)
 
     def call_home(self, instances):
         sm.transition.direction = 'right'
         sm.current = 'Home'
+
+    def call_create_member(self, instances):
+        name = self.nameofmember.text
+        phone_number = self.phoneofmember.text
+        email = self.emailofmember.text
+        password = self.passofmember.text
+        data = member_info()
+        member_id = ''
+        for member in data:
+            member_id = member[0]
+        id = member_id[0]
+        for i in range(1, 4):
+            if int(member_id[i]) == 9:
+                id += str(int(member_id[i-1])+1)
+            elif int(member_id[i]) != 0:
+                id += str(int(member_id[i])+1)
+            else:
+                id += str(int(member_id[i]) + 0)
+        import mysql.connector
+        mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
+        cursor = mycon.cursor()
+        cursor.execute("insert into member_info(member_id,member_phonenumber,member_email,member_name,member_password,"
+                       "member_points) values('{}','{}','{}','{}','{}',{})"
+                       .format(id, phone_number, email, name, password, 0))
+        mycon.commit()
     pass
 
 
