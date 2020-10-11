@@ -1,47 +1,121 @@
 import kivy
-import tkinter as tk
 from kivy.app import App
 from kivy.uix.label import Label
-#from kivy.uix.gridlayout import GridLayout
+# from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
-#from kivy.uix.layout import Layout
-from kivy.graphics import Color,Rectangle
-#from kivy.uix.widget import Widget
+# from kivy.uix.layout import Layout
+from kivy.graphics import Color, Rectangle
+# from kivy.uix.widget import Widget
 from kivy.uix.screenmanager import ScreenManager, Screen 
-#from kivy.lang import Builder
+# from kivy.lang import Builder
+# from kivy.uix.scrollview import ScrollView
+# from kivy.base import runTouchApp
 
 
-#connector to mysql and the database part
+# connector to mysql and the database part
 def mysql():
 
-    '''
+    """
     /usr/local/mysql/bin/mysql -u root -p
-    '''
+    """
     import mysql.connector
     mycon = mysql.connector.connect(user='root', password='avishek2002')
     cursor = mycon.cursor()
     cursor.execute('show databases;')
     databases = cursor.fetchall()
-    state = 'hotel_management' in databases
-    print(state)
-    if state == bool("False") :
-        print(state)
+    condition = ''
+    for database in databases:
+        if "hotel_management" == database[0]:
+            condition = "Exists"
+            break
+        else:
+            condition = "Does not exist"
+    if condition != "Exists":
         cursor.execute('create database if not exists hotel_management;')
         cursor.execute('use hotel_management;')
-        cursor.execute('create table member_info(member_id varchar(10) primary key not null);')
-        cursor.execute('alter table member_info add(phonenumber varchar(15) not null);')
-        cursor.execute('alter table member_info add(name varchar(25) not null);')
-        cursor.execute('alter table member_info add(password varchar(25) not null)')
+
         cursor.execute('create table admin_info(admin_id varchar(10) primary key not null);')
         cursor.execute('alter table admin_info add(admin_phonenumber varchar(15) not null);')
+        cursor.execute('alter table admin_info add(admin_email varchar(50) not null);')
         cursor.execute('alter table admin_info add(admin_name varchar(25) not null);')
         cursor.execute('alter table admin_info add(admin_password varchar(25) not null)')
-#cursor.execute('')
+
+        cursor.execute('create table member_info (member_id varchar(10) primary key not null);')
+        cursor.execute('alter table member_info add(member_phonenumber varchar(15) not null);')
+        cursor.execute('alter table member_info add(member_email varchar(50) not null);')
+        cursor.execute('alter table member_info add(member_name varchar(25) not null);')
+        cursor.execute('alter table member_info add(member_password varchar(25) not null)')
+        cursor.execute('alter table member_info add(member_points int(5) not null)')
+
+        cursor.execute('create table rooms (room_no varchar(5) primary key not null)')
+        cursor.execute("alter table rooms add(room_type varchar(25) not null)")
+        cursor.execute('alter table rooms add(room_availability char(1))')
+        cursor.execute('alter table rooms add(room_capacity int(2) not null)')
+        cursor.execute('alter table rooms add(room_price int(5) not null)')
+
+        cursor.execute('create table booked_rooms(room_no varchar(5) not null)')
+        cursor.execute('alter table booked_rooms add(foreign key(room_no) references rooms(room_no))')
+        cursor.execute('alter table booked_rooms add(id varchar(10) not null)')
+        cursor.execute('alter table booked_rooms add(foreign key(id) references member_info(member_id))')
+        cursor.execute('alter table booked_rooms add(phonenumber varchar(15) not null);')
+        cursor.execute('alter table booked_rooms add(email varchar(50) not null);')
+        cursor.execute('alter table booked_rooms add(name varchar(25) not null);')
+        cursor.execute('alter table booked_rooms add(check_in date not null);')
+        cursor.execute('alter table booked_rooms add(check_out date not null);')
+
+        cursor.execute('create table requested_rooms(room_no varchar(5) not null)')
+        cursor.execute('alter table requested_rooms add(foreign key(room_no) references rooms(room_no))')
+        cursor.execute('alter table requested_rooms add(id varchar(10) not null)')
+        cursor.execute('alter table requested_rooms add(foreign key(id) references member_info(member_id))')
+        cursor.execute('alter table requested_rooms add(phonenumber varchar(15) not null);')
+        cursor.execute('alter table requested_rooms add(email varchar(50) not null);')
+        cursor.execute('alter table requested_rooms add(name varchar(25) not null);')
+        cursor.execute('alter table requested_rooms add(check_in date not null);')
+        cursor.execute('alter table requested_rooms add(check_out date not null);')
+
+    else:
+        print('hi')
+
+
 mysql()
 
-#labels beside the button (design)
+
+# getting available rooms
+def available_rooms():
+    import mysql.connector
+    mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
+    cursor = mycon.cursor()
+    cursor.execute('use hotel_management;')
+    cursor.execute("select * from rooms;")
+    rooms = cursor.fetchall()
+    return rooms
+
+
+# getting admin information
+def admin_info():
+    import mysql.connector
+    mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
+    cursor = mycon.cursor()
+    cursor.execute('use hotel_management;')
+    cursor.execute("select * from admin_info;")
+    data = cursor.fetchall()
+    return data
+
+
+# getting member information
+def member_info():
+    import mysql.connector
+    mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
+    cursor = mycon.cursor()
+    cursor.execute('use hotel_management;')
+    cursor.execute("select * from member_info;")
+    data = cursor.fetchall()
+    return data
+
+
+# labels beside the button (design)
 class MyLabel(Label):
     def on_size(self, *args):
         self.canvas.before.clear()
@@ -52,63 +126,67 @@ class MyLabel(Label):
     pass
 
 
-#Home Page
-class Home(Screen,FloatLayout):
-    def  __init__(self,**kwargs):
-        super(Home,self).__init__(**kwargs)
+# Home Page
+class Home(Screen, FloatLayout):
+    def __init__(self, **kwargs):
+        super(Home, self).__init__(**kwargs)
 
         with self.canvas:
-            Color(1,1,0,1)
-            self.rect =Rectangle(size=(3000,2000))
+            Color(1, 1, 0, 1)
+            self.rect = Rectangle(size=(3000, 2000))
 
-        self.label = Label(text="Select an option: ",font_size=75,color=(225, 225, 225, 1), size_hint =(.4,.3),
-                pos_hint={"x":0.31,"top":1})
+        self.label = Label(text="Select an option: ", font_size=75, color=(225, 225, 225, 1), size_hint=(.4, .3),
+                           pos_hint={"x": 0.31, "top": 1})
         self.add_widget(self.label)
 
         self.guest = Button(text="Guest", font_size=40, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
-                size_hint =(.4,.15),pos_hint={"x":0.3,"top":.7})
+                            size_hint=(.4, .15), pos_hint={"x": 0.3, "top": .7})
         self.guest.bind(on_release=self.call_guest)
         self.add_widget(self.guest)
 
-        self.member = Button(text="Member",font_size=40,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.4,.15),pos_hint={"x":0.3,"top":0.5})
+        self.member = Button(text="Member", font_size=40, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
+                             size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.5})
         self.member.bind(on_release=self.call_member)
         self.add_widget(self.member)
 
-        self.admin = Button(text="Admin",font_size=40,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.4,.15),pos_hint={"x":0.3,"top":.3})
+        self.admin = Button(text="Admin", font_size=40, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
+                            size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
         self.admin.bind(on_release=self.call_admin)
         self.add_widget(self.admin)
 
-        self.create = Button(text='NEW',font_size=30,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.15,.1),pos_hint={"x":0.05,"top":.15})
+        self.create = Button(text='NEW', font_size=30, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
+                             size_hint=(.15, .1), pos_hint={"x": 0.05, "top": 0.15})
         self.create.bind(on_release=self.call_create)
         self.add_widget(self.create)
 
         self.rooms = Button(text='ROOMS', font_size=30, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
-                         size_hint=(.15, .1), pos_hint={"x": 0.8, "top": .15})
+                            size_hint=(.15, .1), pos_hint={"x": 0.8, "top": .15})
         self.rooms.bind(on_release=self.call_rooms)
         self.add_widget(self.rooms)
 
-    def call_guest(self,instances):
+    def call_guest(self, instances):
         sm.transition.direction = 'left'
         sm.current = 'GuestReservation'
-    def call_member(self,instances):
+
+    def call_member(self, instances):
         sm.transition.direction = 'left'
         sm.current = 'MemberLogin'
-    def call_admin(self,instances):
+
+    def call_admin(self, instances):
         sm.transition.direction = 'left'
         sm.current = 'AdminLogin'
-    def call_create(self,instances):
+
+    def call_create(self, instances):
         sm.transition.direction = 'up'
         sm.current = 'Create'
-    def call_rooms(self,instances):
+
+    def call_rooms(self, instances):
         sm.transition.direction = 'up'
         sm.current = 'Rooms'
     pass
 
 
-#Create Account Page
+# Create Account Page
 class Create(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(Create, self).__init__(**kwargs)
@@ -121,8 +199,8 @@ class Create(Screen, FloatLayout):
                            pos_hint={"x": 0.31, "top": 1})
         self.add_widget(self.label)
 
-        self.createmember = Button(text="Become a member", font_size=40, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
-                           size_hint=(.4, .15), pos_hint={"x": 0.3, "top": .55})
+        self.createmember = Button(text="Become a member", font_size=40, background_color=(0, 225, 225, 1),
+                                   color=(225, 225, 225, 1), size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.55})
         self.createmember.bind(on_release=self.call_createmember)
         self.add_widget(self.createmember)
 
@@ -131,16 +209,17 @@ class Create(Screen, FloatLayout):
         self.home.bind(on_release=self.call_home)
         self.add_widget(self.home)
 
-    def call_home(self,instances):
-        sm.transition.direction='right'
-        sm.current='Home'
-    def call_createmember(self,instances):
-        sm.transition.direction='left'
-        sm.current='Createmember'
+    def call_home(self, instances):
+        sm.transition.direction = 'right'
+        sm.current = 'Home'
+
+    def call_createmember(self, instances):
+        sm.transition.direction = 'left'
+        sm.current = 'Createmember'
     pass
 
 
-#Rooms
+# Rooms
 class Rooms(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(Rooms, self).__init__(**kwargs)
@@ -153,195 +232,230 @@ class Rooms(Screen, FloatLayout):
                            pos_hint={"x": 0.31, "top": 1})
         self.add_widget(self.label)
 
+        x = 0.2
+        top = 0.75
+        header_string = ['Room No.', 'Room Type', 'Available', 'Capacity', 'Price(¥)']
+        for header in header_string:
+            self.header = Label(text=header,
+                                font_size=40, color=(225, 225, 225, 1), size_hint=(0, 0),
+                                pos_hint={'x': x, 'top': top})
+            self.add_widget(self.header)
+            x += 0.15
+
+        rooms = available_rooms()
+        top = 0.7
+        for row in range(0, len(rooms)):
+            x = 0.05
+            room = str(rooms[row])
+            position = -1
+            for column in range(0, len(room)):
+                detail = ''
+                while column > position:
+                    for i in range(column, len(room)):
+                        position = i
+                        if room[i].isalpha() or room[i].isdigit():
+                            detail += str(room[i])
+                        else:
+                            break
+                    x += 0.045
+                self.room = MyLabel(text=detail, font_size=25, color=(225, 225, 225, 1),  size_hint=(.0, .0),
+                                    pos_hint={'x': x, 'top': top})
+                self.add_widget(self.room)
+            top -= .05
+
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
                            size_hint=(.15, .025), pos_hint={"x": 0.01, "top": .99})
         self.home.bind(on_release=self.call_home)
         self.add_widget(self.home)
 
-    def call_home(self,instances):
-        sm.transition.direction='right'
-        sm.current='Home'
+    def call_home(self, instances):
+        sm.transition.direction = 'right'
+        sm.current = 'Home'
     pass
 
 
-#Guest reservation
-class GuestReservation(Screen,FloatLayout):
-        def __init__(self,**kwargs):
-                super(GuestReservation,self).__init__(**kwargs)
+# Guest reservation
+class GuestReservation(Screen, FloatLayout):
+    def __init__(self, **kwargs):
+        super(GuestReservation, self).__init__(**kwargs)
 
-                with self.canvas:
-                        Color(1,1,0,1)
-                        self.rect=Rectangle(size=(3000,2000))
+        with self.canvas:
+            Color(1, 1, 0, 1)
+            self.rect = Rectangle(size=(3000, 2000))
 
-                self.label = Label(text="Guest Registration",font_size=75,color=(225, 225, 225, 1), size_hint =(.4,.3),
-                pos_hint={"x":0.31,"top":1})
-                self.add_widget(self.label)
+        self.label = Label(text="Guest Reservation", font_size=75, color=(225, 225, 225, 1), size_hint=(.4, .3),
+                           pos_hint={"x": 0.31, "top": 1})
+        self.add_widget(self.label)
 
-                self.name_label = MyLabel(text="Name",font_size=40,color=(225,225,1,1),size_hint=(.35,.05),
-                pos_hint={"x":0.15,"top":0.8})
-                self.add_widget(self.name_label)
-                self.nameofguest = TextInput(multiline=False,font_size=40,size_hint=(.35,.05),
-                pos_hint={"x":0.5,"top":0.8})
-                self.add_widget(self.nameofguest)
+        self.name_label = MyLabel(text="Name", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                  pos_hint={"x": 0.15, "top": 0.8})
+        self.add_widget(self.name_label)
+        self.nameofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                     pos_hint={"x": 0.5, "top": 0.8})
+        self.add_widget(self.nameofguest)
 
-                self.phone_label = MyLabel(text="Phone Number", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                pos_hint={"x": 0.15, "top": 0.7})
-                self.add_widget(self.phone_label)
-                self.phoneofguest = TextInput(multiline=False,font_size=40, size_hint=(.35, .05),
-                pos_hint={"x": 0.5, "top": 0.7})
-                self.add_widget(self.phoneofguest)
+        self.phone_label = MyLabel(text="Phone Number", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                   pos_hint={"x": 0.15, "top": 0.7})
+        self.add_widget(self.phone_label)
+        self.phoneofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                      pos_hint={"x": 0.5, "top": 0.7})
+        self.add_widget(self.phoneofguest)
 
-                self.roomno_label = MyLabel(text="Room Type", font_size=40, color=(225, 225,1, 1), size_hint=(.35, .05),
-                pos_hint={"x": 0.15, "top": 0.6})
-                self.add_widget(self.roomno_label)
-                self.roomnoofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                pos_hint={"x": 0.5, "top": 0.6})
-                self.add_widget(self.roomnoofguest)
+        self.roomno_label = MyLabel(text="Room Type", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                    pos_hint={"x": 0.15, "top": 0.6})
+        self.add_widget(self.roomno_label)
+        self.roomnoofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                       pos_hint={"x": 0.5, "top": 0.6})
+        self.add_widget(self.roomnoofguest)
 
-                self.noofguests_label = MyLabel(text="Number of Guests", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                pos_hint={"x": 0.15, "top": 0.5})
-                self.add_widget(self.noofguests_label)
-                self.noofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                pos_hint={"x": 0.5, "top": 0.5})
-                self.add_widget(self.noofguest)
+        self.noofguests_label = MyLabel(text="Number of Guests", font_size=40, color=(225, 225, 1, 1),
+                                        size_hint=(.35, .05), pos_hint={"x": 0.15, "top": 0.5})
+        self.add_widget(self.noofguests_label)
+        self.noofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                   pos_hint={"x": 0.5, "top": 0.5})
+        self.add_widget(self.noofguest)
 
-                self.checkin_label = MyLabel(text="Check-in Date", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                pos_hint={"x": 0.15, "top": 0.4})
-                self.add_widget(self.checkin_label)
-                self.checkinofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                pos_hint={"x": 0.5, "top": 0.4})
-                self.add_widget(self.checkinofguest)
+        self.checkin_label = MyLabel(text="Check-in Date", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                     pos_hint={"x": 0.15, "top": 0.4})
+        self.add_widget(self.checkin_label)
+        self.checkinofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                        pos_hint={"x": 0.5, "top": 0.4})
+        self.add_widget(self.checkinofguest)
 
-                self.home = Button(text="Home",font_size=25,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.15,.025),pos_hint={"x":0.01,"top":.99})
-                self.home.bind(on_release=self.call_home)
-                self.add_widget(self.home)
+        self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
+                           size_hint=(.15, .025), pos_hint={"x": 0.01, "top": 0.99})
+        self.home.bind(on_release=self.call_home)
+        self.add_widget(self.home)
 
-                self.submit = Button(text="Submit  form as Guest",font_size=40,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.4,.15),pos_hint={"x":0.3,"top":.3})
-                self.add_widget(self.submit)
+        self.submit = Button(text="Submit  form as Guest", font_size=40, background_color=(0, 225, 225, 1),
+                             color=(225, 225, 225, 1), size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+        self.add_widget(self.submit)
+
+    def call_home(self, instances):
+        sm.transition.direction = 'right'
+        sm.current = 'Home'
+
+    pass
 
 
-        def call_home(self,instances):
-                sm.transition.direction='right'
-                sm.current='Home'
+# Member login and reservation and signup
+class MemberLogin(Screen, FloatLayout):
+    def __init__(self, **kwargs):
+        super(MemberLogin, self).__init__(**kwargs)
 
-        pass
-
-
-#Member login and reservation and signup
-class MemberLogin(Screen,FloatLayout):
-        def __init__(self,**kwargs):
-                super(MemberLogin,self).__init__(**kwargs)
-
-                with self.canvas:
-                        Color(1,1,0,1)
-                        self.rect=Rectangle(size=(3000,2000))
+        with self.canvas:
+            Color(1, 1, 0, 1)
+            self.rect = Rectangle(size=(3000, 2000))
                         
-                self.label = Label(text="Member Login",font_size=75,color=(225, 225, 225, 1), size_hint =(.4,.3),
-                pos_hint={"x":0.31,"top":1})
-                self.add_widget(self.label)
+        self.label = Label(text="Member Login", font_size=75, color=(225, 225, 225, 1), size_hint=(.4, .3),
+                           pos_hint={"x": 0.31, "top": 1})
+        self.add_widget(self.label)
 
-                self.email_label = MyLabel(text="Login Email", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                                          pos_hint={"x": 0.15, "top": 0.8})
+        self.id_label = MyLabel(text="Member ID", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                pos_hint={"x": 0.15, "top": 0.8})
+        self.add_widget(self.id_label)
+        self.idofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                   pos_hint={"x": 0.5, "top": 0.8})
+        self.add_widget(self.idofguest)
 
-                self.add_widget(self.email_label)
-                self.emailofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                             pos_hint={"x": 0.5, "top": 0.8})
-                self.add_widget(self.emailofguest)
+        self.password_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                      pos_hint={"x": 0.15, "top": 0.7})
+        self.add_widget(self.password_label)
+        self.passwordofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                         pos_hint={"x": 0.5, "top": 0.7})
+        self.add_widget(self.passwordofguest)
 
-                self.password_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1),
-                                           size_hint=(.35, .05),
-                                           pos_hint={"x": 0.15, "top": 0.7})
-                self.add_widget(self.password_label)
-                self.passwordofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                              pos_hint={"x": 0.5, "top": 0.7})
-                self.add_widget(self.passwordofguest)
+        self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
+                           size_hint=(.15, .025), pos_hint={"x": 0.01, "top": 0.99})
+        self.home.bind(on_release=self.call_home)
+        self.add_widget(self.home)
 
-                self.home = Button(text="Home",font_size=25,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.15,.025),pos_hint={"x":0.01,"top":.99})
-                self.home.bind(on_release=self.call_home)
-                self.add_widget(self.home)
+        self.memberregistration = Button(text="Login", font_size=40, background_color=(0, 225, 225, 1),
+                                         color=(225, 225, 225, 1), size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+        self.memberregistration.bind(on_release=self.call_memberreservation)
+        self.add_widget(self.memberregistration)
 
-                self.memberregistration = Button(text="Login",font_size=40,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.4,.15),pos_hint={"x":0.3,"top":.3})
-                self.memberregistration.bind(on_release=self.call_memberreservation)
-                self.add_widget(self.memberregistration)
+    def call_home(self, instances):
+        sm.transition.direction = 'right'
+        sm.current = 'Home'
 
-        def call_home(self,instances):
-                sm.transition.direction='right'
-                sm.current='Home'
-        def call_memberreservation(self,instances):
-                sm.transition.direction='left'
-                sm.current='MemberReservation'
-        pass
+    def call_memberreservation(self, instances):
+        id = self.idofguest.text
+        password = self.passwordofguest.text
+        memberinfo = member_info()
+        for member in memberinfo:
+            if id in member and password in member:
+                sm.transition.direction = 'left'
+                sm.current = 'MemberReservation'
+            else:
+                print('incorrect')
 
-class MemberReservation(Screen,FloatLayout):
-        def __init__(self,**kwargs):
-                super(MemberReservation,self).__init__(**kwargs)
+    pass
 
-                with self.canvas:
-                        Color(1,1,0,1)
-                        self.rect=Rectangle(size=(3000,2000))
 
-                self.label = Label(text='Member Reservation',font_size=75,color=(225,225,225,1),size_hint=(.4,.3),
-                pos_hint={'x':0.31,'top':1})
-                self.add_widget(self.label)
+class MemberReservation(Screen, FloatLayout):
+    def __init__(self, **kwargs):
+        super(MemberReservation, self).__init__(**kwargs)
 
-                self.name_label = MyLabel(text="Name", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                                          pos_hint={"x": 0.15, "top": 0.8})
-                self.add_widget(self.name_label)
-                self.nameofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                             pos_hint={"x": 0.5, "top": 0.8})
-                self.add_widget(self.nameofguest)
+        with self.canvas:
+            Color(1, 1, 0, 1)
+            self.rect = Rectangle(size=(3000, 2000))
 
-                self.phone_label = MyLabel(text="Phone Number", font_size=40, color=(225, 225, 1, 1),
-                                           size_hint=(.35, .05),
-                                           pos_hint={"x": 0.15, "top": 0.7})
-                self.add_widget(self.phone_label)
-                self.phoneofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                              pos_hint={"x": 0.5, "top": 0.7})
-                self.add_widget(self.phoneofguest)
+        self.label = Label(text='Member Reservation', font_size=75, color=(225, 225, 225, 1), size_hint=(.4, .3),
+                           pos_hint={'x': 0.31, 'top': 1})
+        self.add_widget(self.label)
 
-                self.roomno_label = MyLabel(text="Room Type", font_size=40, color=(225, 225, 1, 1),
-                                            size_hint=(.35, .05),
-                                            pos_hint={"x": 0.15, "top": 0.6})
-                self.add_widget(self.roomno_label)
-                self.roomnoofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                               pos_hint={"x": 0.5, "top": 0.6})
-                self.add_widget(self.roomnoofguest)
+        self.name_label = MyLabel(text="Name", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                  pos_hint={"x": 0.15, "top": 0.8})
+        self.add_widget(self.name_label)
+        self.nameofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                     pos_hint={"x": 0.5, "top": 0.8})
+        self.add_widget(self.nameofguest)
 
-                self.noofguests_label = MyLabel(text="Number of Guests", font_size=40, color=(225, 225, 1, 1),
-                                                size_hint=(.35, .05),
-                                                pos_hint={"x": 0.15, "top": 0.5})
-                self.add_widget(self.noofguests_label)
-                self.noofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                           pos_hint={"x": 0.5, "top": 0.5})
-                self.add_widget(self.noofguest)
+        self.phone_label = MyLabel(text="Phone Number", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                   pos_hint={"x": 0.15, "top": 0.7})
+        self.add_widget(self.phone_label)
+        self.phoneofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                      pos_hint={"x": 0.5, "top": 0.7})
+        self.add_widget(self.phoneofguest)
 
-                self.checkin_label = MyLabel(text="Check-in Date", font_size=40, color=(225, 225, 1, 1),
-                                             size_hint=(.35, .05),
-                                             pos_hint={"x": 0.15, "top": 0.4})
-                self.add_widget(self.checkin_label)
-                self.checkinofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                                pos_hint={"x": 0.5, "top": 0.4})
-                self.add_widget(self.checkinofguest)
+        self.roomno_label = MyLabel(text="Room Type", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                    pos_hint={"x": 0.15, "top": 0.6})
+        self.add_widget(self.roomno_label)
+        self.roomnoofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                       pos_hint={"x": 0.5, "top": 0.6})
+        self.add_widget(self.roomnoofguest)
 
-                self.memberlogin = Button(text="Home",font_size=25,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.15,.025),pos_hint={"x":0.01,"top":.99})
-                self.memberlogin.bind(on_release=self.call_memberlogin)
-                self.add_widget(self.memberlogin)
+        self.noofguests_label = MyLabel(text="Number of Guests", font_size=40, color=(225, 225, 1, 1),
+                                        size_hint=(.35, .05), pos_hint={"x": 0.15, "top": 0.5})
+        self.add_widget(self.noofguests_label)
+        self.noofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                   pos_hint={"x": 0.5, "top": 0.5})
+        self.add_widget(self.noofguest)
 
-                self.submit = Button(text="Submit  form as Member",font_size=40,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.4,.15),pos_hint={"x":0.3,"top":.3})
-                self.add_widget(self.submit)
+        self.checkin_label = MyLabel(text="Check-in Date", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                     pos_hint={"x": 0.15, "top": 0.4})
+        self.add_widget(self.checkin_label)
+        self.checkinofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                        pos_hint={"x": 0.5, "top": 0.4})
+        self.add_widget(self.checkinofguest)
 
-        def call_memberlogin(self,instances):
-                sm.transition.direction = 'right'
-                sm.current = 'Home'
-        pass
+        self.memberlogin = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1),
+                                  color=(225, 225, 225, 1), size_hint=(.15, .025), pos_hint={"x": 0.01, "top": 0.99})
+        self.memberlogin.bind(on_release=self.call_memberlogin)
+        self.add_widget(self.memberlogin)
 
-class Createmember(Screen,FloatLayout):
+        self.submit = Button(text="Submit form as Member", font_size=40, background_color=(0, 225, 225, 1),
+                             color=(225, 225, 225, 1), size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+        self.add_widget(self.submit)
+
+    def call_memberlogin(self, instances):
+        sm.transition.direction = 'right'
+        sm.current = 'Home'
+    pass
+
+
+class Createmember(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(Createmember, self).__init__(**kwargs)
 
@@ -357,7 +471,7 @@ class Createmember(Screen,FloatLayout):
                                   pos_hint={"x": 0.15, "top": 0.8})
         self.add_widget(self.name_label)
         self.nameofmember = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                     pos_hint={"x": 0.5, "top": 0.8})
+                                      pos_hint={"x": 0.5, "top": 0.8})
         self.add_widget(self.nameofmember)
 
         self.phone_label = MyLabel(text="Phone Number", font_size=40, color=(225, 225, 1, 1),
@@ -365,15 +479,14 @@ class Createmember(Screen,FloatLayout):
                                    pos_hint={"x": 0.15, "top": 0.7})
         self.add_widget(self.phone_label)
         self.phoneofmember = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                      pos_hint={"x": 0.5, "top": 0.7})
+                                       pos_hint={"x": 0.5, "top": 0.7})
         self.add_widget(self.phoneofmember)
 
-        self.pass_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1),
-                                    size_hint=(.35, .05),
-                                    pos_hint={"x": 0.15, "top": 0.6})
+        self.pass_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                  pos_hint={"x": 0.15, "top": 0.6})
         self.add_widget(self.pass_label)
         self.passofmember = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                       pos_hint={"x": 0.5, "top": 0.6})
+                                      pos_hint={"x": 0.5, "top": 0.6})
         self.add_widget(self.passofmember)
 
         self.pass2_label = MyLabel(text="Confirm password", font_size=40, color=(225, 225, 1, 1),
@@ -381,7 +494,7 @@ class Createmember(Screen,FloatLayout):
                                         pos_hint={"x": 0.15, "top": 0.5})
         self.add_widget(self.pass2_label)
         self.pass2ofmember = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                   pos_hint={"x": 0.5, "top": 0.5})
+                                       pos_hint={"x": 0.5, "top": 0.5})
         self.add_widget(self.pass2ofmember)
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
@@ -389,90 +502,94 @@ class Createmember(Screen,FloatLayout):
         self.home.bind(on_release=self.call_home)
         self.add_widget(self.home)
 
-        self.submit = Button(text="Done", font_size=40, background_color=(0, 225, 225, 1),
-                                        color=(225, 225, 225, 1),
-                                        size_hint=(.4, .15), pos_hint={"x": 0.3, "top": .3})
-        #self.submit.bind(on_release=self.call_home)
+        self.submit = Button(text="Done", font_size=40, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
+                             size_hint=(.4, .15), pos_hint={"x": 0.3, "top": .3})
+        # self.submit.bind(on_release=self.call_home)
         self.add_widget(self.submit)
-
 
     def call_home(self, instances):
         sm.transition.direction = 'right'
         sm.current = 'Home'
     pass
 
-#Admin Login
-class AdminLogin(Screen,FloatLayout):
-        def __init__(self,**kwargs):
-                super(AdminLogin,self).__init__(**kwargs)
 
-                with self.canvas:
-                        Color(1,1,0,1)
-                        self.rect=Rectangle(size=(3000,2000))
+# Admin Login
+class AdminLogin(Screen, FloatLayout):
+    def __init__(self, **kwargs):
+        super(AdminLogin, self).__init__(**kwargs)
 
-                self.label = Label(text="Admin Login",font_size=75,color=(225, 225, 225, 1), size_hint =(.4,.3),
-                pos_hint={"x":0.31,"top":1})
-                self.add_widget(self.label)
+        with self.canvas:
+            Color(1, 1, 0, 1)
+            self.rect = Rectangle(size=(3000, 2000))
 
-                self.email_label = MyLabel(text="Login Email", font_size=40, color=(225, 225, 1, 1),
-                                           size_hint=(.35, .05),
-                                           pos_hint={"x": 0.15, "top": 0.8})
-                self.add_widget(self.email_label)
-                self.emailofadmin = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                              pos_hint={"x": 0.5, "top": 0.8})
-                self.add_widget(self.emailofadmin)
+        self.label = Label(text="Admin Login", font_size=75, color=(225, 225, 225, 1), size_hint=(.4, .3),
+                           pos_hint={"x": 0.31, "top": 1})
+        self.add_widget(self.label)
 
-                self.password_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1),
-                                              size_hint=(.35, .05),
-                                              pos_hint={"x": 0.15, "top": 0.7})
-                self.add_widget(self.password_label)
-                self.passwordofadmin = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                                 pos_hint={"x": 0.5, "top": 0.7})
-                self.add_widget(self.passwordofadmin)
+        self.id_label = MyLabel(text="Admin ID", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                pos_hint={"x": 0.15, "top": 0.8})
+        self.add_widget(self.id_label)
+        self.idofadmin = TextInput(multiline=False, font_size=40, size_hint=(.35, .05), pos_hint={"x": 0.5, "top": 0.8})
+        self.add_widget(self.idofadmin)
 
-                self.home = Button(text="Home",font_size=25,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.15,.025),pos_hint={"x":0.01,"top":.99})
-                self.home.bind(on_release=self.call_home)
-                self.add_widget(self.home)
+        self.password_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                      pos_hint={"x": 0.15, "top": 0.7})
+        self.add_widget(self.password_label)
+        self.passwordofadmin = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                         pos_hint={"x": 0.5, "top": 0.7})
+        self.add_widget(self.passwordofadmin)
 
-                self.adminconfirmation = Button(text="Login",font_size=40,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.4,.15),pos_hint={"x":0.3,"top":.3})
-                self.adminconfirmation.bind(on_release=self.call_adminconfirmation)
-                self.add_widget(self.adminconfirmation)
+        self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
+                           size_hint=(.15, .025), pos_hint={"x": 0.01, "top": 0.99})
+        self.home.bind(on_release=self.call_home)
+        self.add_widget(self.home)
 
-        def call_home(self,instances):
-                sm.transition.direction='right'
-                sm.current='Home'
-        def call_adminconfirmation(self,instances):
-                sm.transition.direction='left'
-                sm.current='AdminConfirmation'
-        pass
+        self.adminconfirmation = Button(text="Login", font_size=40, background_color=(0, 225, 225, 1),
+                                        color=(225, 225, 225, 1), size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+        self.adminconfirmation.bind(on_release=self.call_adminconfirmation)
+        self.add_widget(self.adminconfirmation)
 
-class AdminConfirmation(Screen,FloatLayout):
-        def __init__(self,**kwargs):
-                super(AdminConfirmation,self).__init__(**kwargs)
+    def call_home(self, instances):
+        sm.transition.direction = 'right'
+        sm.current = 'Home'
 
-                with self.canvas:
-                        Color(1,1,0,1)
-                        self.rect=Rectangle(size=(3000,2000))
-
-                self.label = Label(text='Admin Confirmation',font_size=75,color=(225,225,225,1),size_hint=(.4,.3),
-                pos_hint={'x':0.31,'top':1})
-                self.add_widget(self.label)
-
-                self.home = Button(text="Home",font_size=25,background_color=(0,225,225,1),color=(225,225,225,1),
-                size_hint =(.15,.025),pos_hint={"x":0.01,"top":.99})
-                self.home.bind(on_release=self.call_home)
-                self.add_widget(self.home)
-
-        def call_home(self,instances):
-                sm.transition.direction = 'right'
-                sm.current = 'Home'
-        pass
+    def call_adminconfirmation(self, instances):
+        id = self.idofadmin.text
+        password = self.passwordofadmin.text
+        admininfo = admin_info()
+        for admin in admininfo:
+            if id in admin and password in admin:
+                sm.transition.direction = 'left'
+                sm.current = 'AdminConfirmation'
+            else:
+                print('incorrect')
+    pass
 
 
+class AdminConfirmation(Screen, FloatLayout):
+    def __init__(self, **kwargs):
+        super(AdminConfirmation, self).__init__(**kwargs)
 
-#Screen manager
+        with self.canvas:
+            Color(1, 1, 0, 1)
+            self.rect = Rectangle(size=(3000, 2000))
+
+        self.label = Label(text='Admin Confirmation', font_size=75, color=(225, 225, 225, 1),
+                           size_hint=(.4, .3), pos_hint={'x': 0.31, 'top': 1})
+        self.add_widget(self.label)
+
+        self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1),
+                           color=(225, 225, 225, 1), size_hint=(.15, .025), pos_hint={"x": 0.01, "top": 0.99})
+        self.home.bind(on_release=self.call_home)
+        self.add_widget(self.home)
+
+    def call_home(self, instances):
+        sm.transition.direction = 'right'
+        sm.current = 'Home'
+    pass
+
+
+# Screen manager
 sm = ScreenManager()
 sm.add_widget(Home(name='Home'))
 sm.add_widget(Create(name='Create'))
@@ -485,8 +602,6 @@ sm.add_widget(AdminLogin(name='AdminLogin'))
 sm.add_widget(AdminConfirmation(name='AdminConfirmation'))
 
 
-
-
 class HotelReservationApp(App):
     def build(self):
         return sm
@@ -494,7 +609,3 @@ class HotelReservationApp(App):
 
 if __name__ == "__main__":
     HotelReservationApp().run()
-
-
-
-
