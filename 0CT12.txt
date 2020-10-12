@@ -1,0 +1,19 @@
+''' 
+1. A binary file "Book.dat" has structure [BookNo, Book_Name, Author, Price].
+	i. Write a user defined function CreateFile() to input data for a recod and add to Book.dat.
+	ii. Write a function CountRec(Author) in Python which accepts the Author name as a parameter and count,
+	    and return number of books by the given Author are stored in the binary file "Book.dat".
+
+2. A binary file "STUDENT.DAT" has structure (admission_number, name, percentage).
+   Write a function countrec() in Python that would read contents of the file and display details of those students whose percentage is above 75.
+   Also display number of students scoring above 75.
+
+3. Write a function AMCount() in Python, which should read each character of a text file STORT.TXT, should count and display the occurence of alphabets A and M (includeing lower cases also).
+   Example, if the file is as below;
+	***STORY.TXT***
+		Updated information
+		As simplified by official websites.
+	***Output***
+		A or a : 4
+		M or m : 2
+'''
