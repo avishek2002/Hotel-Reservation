@@ -50,37 +50,35 @@ def mysql():
         cursor.execute('alter table member_info add(member_phonenumber varchar(15) not null);')
         cursor.execute('alter table member_info add(member_email varchar(50) not null);')
         cursor.execute('alter table member_info add(member_name varchar(25) not null);')
-        cursor.execute('alter table member_info add(member_password varchar(25) not null)')
-        cursor.execute('alter table member_info add(member_points int(5) not null)')
+        cursor.execute('alter table member_info add(member_password varchar(25) not null);')
+        cursor.execute('alter table member_info add(member_points int(5) not null);')
 
-        cursor.execute('create table rooms (room_no varchar(5) primary key not null)')
-        cursor.execute("alter table rooms add(room_type varchar(25) not null)")
-        cursor.execute('alter table rooms add(room_availability char(1))')
-        cursor.execute('alter table rooms add(room_capacity int(2) not null)')
-        cursor.execute('alter table rooms add(room_price int(5) not null)')
+        cursor.execute('create table rooms (room_no varchar(5) primary key not null);')
+        cursor.execute("alter table rooms add(room_type varchar(25) not null);")
+        cursor.execute('alter table rooms add(room_availability char(1));')
+        cursor.execute('alter table rooms add(room_capacity int(2) not null);')
+        cursor.execute('alter table rooms add(room_price int(5) not null);')
 
-        cursor.execute('create table booked_rooms(room_no varchar(5) not null)')
-        cursor.execute('alter table booked_rooms add(foreign key(room_no) references rooms(room_no))')
-        cursor.execute('alter table booked_rooms add(id varchar(10) not null)')
-        cursor.execute('alter table booked_rooms add(foreign key(id) references member_info(member_id))')
+        cursor.execute('create table booked_rooms(room_no varchar(5) not null);')
+        cursor.execute('alter table booked_rooms add(foreign key(room_no) references rooms(room_no));')
+        cursor.execute('alter table booked_rooms add(id varchar(10) not null);')
+        cursor.execute('alter table booked_rooms add(foreign key(id) references member_info(member_id));')
         cursor.execute('alter table booked_rooms add(phonenumber varchar(15) not null);')
         cursor.execute('alter table booked_rooms add(email varchar(50) not null);')
         cursor.execute('alter table booked_rooms add(name varchar(25) not null);')
         cursor.execute('alter table booked_rooms add(check_in date not null);')
         cursor.execute('alter table booked_rooms add(check_out date not null);')
 
-        cursor.execute('create table requested_rooms(room_no varchar(5) not null)')
-        cursor.execute('alter table requested_rooms add(foreign key(room_no) references rooms(room_no))')
-        cursor.execute('alter table requested_rooms add(id varchar(10) not null)')
-        cursor.execute('alter table requested_rooms add(foreign key(id) references member_info(member_id))')
+        cursor.execute('create table requested_rooms(room_type varchar(25) not null);')
+        cursor.execute('alter table requested_rooms add(id varchar(10) not null);')
         cursor.execute('alter table requested_rooms add(phonenumber varchar(15) not null);')
-        cursor.execute('alter table requested_rooms add(email varchar(50) not null);')
         cursor.execute('alter table requested_rooms add(name varchar(25) not null);')
+        cursor.execute('alter table requested_rooms add(no_guests int(2) not null);')
         cursor.execute('alter table requested_rooms add(check_in date not null);')
         cursor.execute('alter table requested_rooms add(check_out date not null);')
         mycon.commit()
     else:
-        print('hi')
+        print("Database 'hotel_management' exists.")
 
 
 mysql()
@@ -93,6 +91,17 @@ def available_rooms():
     cursor = mycon.cursor()
     cursor.execute('use hotel_management;')
     cursor.execute("select * from rooms;")
+    rooms = cursor.fetchall()
+    return rooms
+
+
+# getting requested_rooms
+def requested_rooms():
+    import mysql.connector
+    mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
+    cursor = mycon.cursor()
+    cursor.execute('use hotel_management;')
+    cursor.execute("select * from requested_rooms;")
     rooms = cursor.fetchall()
     return rooms
 
@@ -117,6 +126,18 @@ def member_info():
     cursor.execute("select * from member_info;")
     data = cursor.fetchall()
     return data
+
+
+# inserting value into requested_rooms
+def request_room(name, phone, room_type, noofquests, check_in, check_out):
+    import mysql.connector
+    mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
+    cursor = mycon.cursor()
+    cursor.execute("insert into requested_rooms(room_type,id,phonenumber,name,no_guests,check_in,check_out)"
+                   "values('{}','{}','{}','{}',{},'{}','{}')"
+                   .format(room_type, 'GUEST', phone, name, noofquests, check_in, check_out))
+    mycon.commit()
+    return
 
 
 # labels beside the button (design)
@@ -305,12 +326,12 @@ class GuestReservation(Screen, FloatLayout):
                                       pos_hint={"x": 0.5, "top": 0.7})
         self.add_widget(self.phoneofguest)
 
-        self.roomno_label = MyLabel(text="Room Type", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                                    pos_hint={"x": 0.15, "top": 0.6})
-        self.add_widget(self.roomno_label)
-        self.roomnoofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                       pos_hint={"x": 0.5, "top": 0.6})
-        self.add_widget(self.roomnoofguest)
+        self.room_label = MyLabel(text="Room Type", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                  pos_hint={"x": 0.15, "top": 0.6})
+        self.add_widget(self.room_label)
+        self.roomofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                     pos_hint={"x": 0.5, "top": 0.6})
+        self.add_widget(self.roomofguest)
 
         self.noofguests_label = MyLabel(text="Number of Guests", font_size=40, color=(225, 225, 1, 1),
                                         size_hint=(.35, .05), pos_hint={"x": 0.15, "top": 0.5})
@@ -326,19 +347,35 @@ class GuestReservation(Screen, FloatLayout):
                                         pos_hint={"x": 0.5, "top": 0.4})
         self.add_widget(self.checkinofguest)
 
+        self.checkout_label = MyLabel(text="Check-in Date", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                      pos_hint={"x": 0.15, "top": 0.3})
+        self.add_widget(self.checkout_label)
+        self.checkoutofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                         pos_hint={"x": 0.5, "top": 0.3})
+        self.add_widget(self.checkoutofguest)
+
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
                            size_hint=(.15, .025), pos_hint={"x": 0.01, "top": 0.99})
         self.home.bind(on_release=self.call_home)
         self.add_widget(self.home)
 
         self.submit = Button(text="Submit  form as Guest", font_size=40, background_color=(0, 225, 225, 1),
-                             color=(225, 225, 225, 1), size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+                             color=(225, 225, 225, 1), size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.2})
+        self.submit.bind(on_release=self.guest_submit)
         self.add_widget(self.submit)
 
     def call_home(self, instances):
         sm.transition.direction = 'right'
         sm.current = 'Home'
 
+    def guest_submit(self, instances):
+        name = self.nameofguest.text
+        phone = self.phoneofguest.text
+        room_type = self.roomofguest.text
+        noofquests = self.noofguest.text
+        check_in = self.checkinofguest.text
+        check_out = self.checkoutofguest.text
+        request_room(name, phone, room_type, noofquests, check_in, check_out)
     pass
 
 
@@ -605,6 +642,27 @@ class AdminConfirmation(Screen, FloatLayout):
         self.label = Label(text='Admin Confirmation', font_size=75, color=(225, 225, 225, 1),
                            size_hint=(.4, .3), pos_hint={'x': 0.31, 'top': 1})
         self.add_widget(self.label)
+
+        x = 0.15
+        top = 0.75
+        header_string = ['Room Type', 'ID', 'Phone No.', 'Name', 'No. of guests', 'Check-in', 'Check-out', 'Approve']
+        for header in header_string:
+            self.header = Label(text=header, font_size=30, color=(225, 225, 225, 1), size_hint=(0, 0),
+                                pos_hint={'x': x, 'top': top})
+            self.add_widget(self.header)
+            x += 0.1
+
+        requested = requested_rooms()
+        top = 0.7
+        for request in requested:
+            x = 0.15
+            for value in request:
+                detail = str(value)
+                self.value = MyLabel(text=detail, font_size=25, color=(225, 225, 225, 1), size_hint=(.0, .0),
+                                     pos_hint={'x': x, 'top': top})
+                self.add_widget(self.value)
+                x += 0.1
+            top -= 0.05
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1),
                            color=(225, 225, 225, 1), size_hint=(.15, .025), pos_hint={"x": 0.01, "top": 0.99})
