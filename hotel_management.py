@@ -1,7 +1,9 @@
 import kivy
+import time
 # from kivy.lang import Builder
 # from kivy.base import runTouchApp
 from kivy.app import App
+from kivy.uix.checkbox import CheckBox
 from kivy.uix.label import Label
 # from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
@@ -79,6 +81,7 @@ def mysql():
         cursor.execute('alter table requested_rooms add(check_in date not null);')
         cursor.execute('alter table requested_rooms add(check_out date not null);')
         mycon.commit()
+        mycon.close()
     else:
         print("Database 'hotel_management' exists.")
 
@@ -94,10 +97,11 @@ def available_rooms():
     cursor.execute('use hotel_management;')
     cursor.execute("select * from rooms;")
     rooms = cursor.fetchall()
+    mycon.close()
     return rooms
 
 
-# getting requested_rooms
+# getting requested rooms
 def requested_rooms():
     import mysql.connector
     mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
@@ -105,6 +109,19 @@ def requested_rooms():
     cursor.execute('use hotel_management;')
     cursor.execute("select * from requested_rooms;")
     rooms = cursor.fetchall()
+    mycon.close()
+    return rooms
+
+
+# getting booked rooms
+def booked_rooms():
+    import mysql.connector
+    mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
+    cursor = mycon.cursor()
+    cursor.execute('use hotel_management;')
+    cursor.execute("select * from booked_rooms;")
+    rooms = cursor.fetchall()
+    mycon.close()
     return rooms
 
 
@@ -116,6 +133,7 @@ def admin_info():
     cursor.execute('use hotel_management;')
     cursor.execute("select * from admin_info;")
     data = cursor.fetchall()
+    mycon.close()
     return data
 
 
@@ -127,37 +145,209 @@ def member_info():
     cursor.execute('use hotel_management;')
     cursor.execute("select * from member_info;")
     data = cursor.fetchall()
+    mycon.close()
     return data
-
-
-# incorrect login details screen
-class popup_incorrect_screen(FloatLayout):
-    def __init__(self, **kwargs):
-        super(popup_incorrect_screen, self).__init__(**kwargs)
-
-        self.label = Label(text="ID or Password is incorrect!", font_size=50, color=(225, 225, 225, 1),
-                           size_hint=(.4, .3), pos_hint={"x": 0.31, "top": 1})
-        self.add_widget(self.label)
-
-        self.back = Button(text="Try Again", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
-                           size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
-        self.back.bind(on_release=self.call_home)
-        self.add_widget(self.back)
-
-    def call_home(self, instances):
-        popup_incorrect()
-
-    pass
 
 
 # incorrect login details
 def popup_incorrect():
+
+    # incorrect login details screen
+    class popup_incorrect_screen(FloatLayout):
+        def __init__(self, **kwargs):
+            super(popup_incorrect_screen, self).__init__(**kwargs)
+
+            self.label = Label(text="ID or Password is incorrect!", font_size=50, color=(1, 0, 0, 1),
+                               size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.add_widget(self.label)
+
+            self.back = Button(text="Try Again", font_size=25, background_color=(0, 225, 225, 1),
+                               color=(225, 225, 225, 1),
+                               size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+            self.back.bind(on_release=self.call_back)
+            self.add_widget(self.back)
+
+        def call_back(self, instances):
+            popupWindow.dismiss()
+
+        pass
+
     show = popup_incorrect_screen()
 
-    popupWindow = Popup(title="Login Error", content=show, size_hint=(None, None), size=(800, 800),
-                        pos=(0, 0))
+    popupWindow = Popup(title="Login Error", content=show, size_hint=(None, None), size=(650, 600),
+                        pos=(0, 0), auto_dismiss=False)
 
     popupWindow.open()
+
+
+# invalid room reservation submission
+def popup_invalid_submission():
+
+    # invalid room reservation submission screen
+    class popup_invalid_screen(FloatLayout):
+        def __init__(self, **kwargs):
+            super(popup_invalid_screen, self).__init__(**kwargs)
+
+            self.label = Label(text="The text boxes must not be left empty and must be in correct format!",
+                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.add_widget(self.label)
+
+            self.back = Button(text="Re-try submitting form", font_size=25, background_color=(0, 225, 225, 1),
+                               color=(225, 225, 225, 1),
+                               size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+            self.back.bind(on_release=self.call_back)
+            self.add_widget(self.back)
+
+        def call_back(self, instances):
+            invalidWindow.dismiss()
+
+        pass
+
+    show = popup_invalid_screen()
+
+    invalidWindow = Popup(title="Submission Error", content=show, size_hint=(None, None), size=(650, 600),
+                          pos=(0, 0), auto_dismiss=False)
+
+    invalidWindow.open()
+
+
+# valid room reservation submission
+def popup_valid_submission():
+
+    # valid room reservation submission screen
+    class popup_valid_screen(FloatLayout):
+        def __init__(self, **kwargs):
+            super(popup_valid_screen, self).__init__(**kwargs)
+
+            self.label = Label(text="Successfully sent request for room reservation!",
+                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.add_widget(self.label)
+
+            self.back = Button(text="Return to Home Screen", font_size=25, background_color=(0, 225, 225, 1),
+                               color=(225, 225, 225, 1),
+                               size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+            self.back.bind(on_release=self.call_back)
+            self.add_widget(self.back)
+
+        def call_back(self, instances):
+            validWindow.dismiss()
+
+        pass
+
+    show = popup_valid_screen()
+
+    validWindow = Popup(title="Submission success", content=show, size_hint=(None, None), size=(650, 600),
+                        pos=(0, 0), auto_dismiss=False)
+
+    validWindow.open()
+
+
+# confirm reservations as Admin
+def popup_confirm():
+
+    # confirm reservation screen
+    class popup_confirm_screen(FloatLayout):
+        def __init__(self, **kwargs):
+            super(popup_confirm_screen, self).__init__(**kwargs)
+
+            self.label = Label(text="Confirmed reservations for the selected rooms!",
+                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.add_widget(self.label)
+
+            self.back = Button(text="Return to your Page", font_size=25, background_color=(0, 225, 225, 1),
+                               color=(225, 225, 225, 1),
+                               size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+            self.back.bind(on_release=self.call_back)
+            self.add_widget(self.back)
+
+        def call_back(self, instances):
+            confirmWindow.dismiss()
+
+        pass
+
+    show = popup_confirm_screen()
+
+    confirmWindow = Popup(title="Confirmation success", content=show, size_hint=(None, None), size=(650, 600),
+                          pos=(0, 0), auto_dismiss=False)
+
+    confirmWindow.open()
+
+
+# creating member account
+def create_member(ID, phone_number, email, name, password):
+    import mysql.connector
+    mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
+    cursor = mycon.cursor()
+    cursor.execute("insert into member_info(member_id,member_phonenumber,member_email,member_name,"
+                   "member_password, member_points) values('{}','{}','{}','{}','{}',{})"
+                   .format(ID, phone_number, email, name, password, 0))
+    mycon.commit()
+    mycon.close()
+    return
+
+
+# member account created
+def popup_account_created():
+
+    # member account created screen
+    class account_created_screen(FloatLayout):
+        def __init__(self, **kwargs):
+            super(account_created_screen, self).__init__(**kwargs)
+
+            self.label = Label(text="Your Member Account has been successfully created!",
+                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.add_widget(self.label)
+
+            self.back = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1),
+                               color=(225, 225, 225, 1),
+                               size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+            self.back.bind(on_release=self.call_back)
+            self.add_widget(self.back)
+
+        def call_back(self, instances):
+            accountWindow.dismiss()
+            sm.transition.direction = 'right'
+            sm.current = 'Home'
+
+        pass
+
+    show = account_created_screen()
+
+    accountWindow = Popup(title="Account Created", content=show, size_hint=(None, None), size=(650, 600),
+                          pos=(0, 0), auto_dismiss=False)
+
+    accountWindow.open()
+
+
+# member account creation failure
+def popup_account_notcreated():
+
+    # member account creation failure screen
+    class account_notcreated_screen(FloatLayout):
+        def __init__(self, **kwargs):
+            super(account_notcreated_screen, self).__init__(**kwargs)
+
+            self.label = Label(text="Your Member Account could not be processed!",
+                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.add_widget(self.label)
+
+            self.back = Button(text="Try Again", font_size=25, background_color=(0, 225, 225, 1),
+                               color=(225, 225, 225, 1),
+                               size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+            self.back.bind(on_release=self.call_back)
+            self.add_widget(self.back)
+
+        def call_back(self, instances):
+            failureWindow.dismiss()
+
+        pass
+
+    show = account_notcreated_screen()
+
+    failureWindow = Popup(title="ERROR", content=show, size_hint=(None, None), size=(650, 600),
+                          pos=(0, 0), auto_dismiss=False)
+
+    failureWindow.open()
 
 
 # inserting value into requested_rooms as guest
@@ -173,19 +363,19 @@ def request_room(name, phone, room_type, noofquests, check_in, check_out):
 
 
 # inserting value into requested_rooms as member
-def request_room_asmember(id, room_type, noofquests, check_in, check_out):
+def request_room_asmember(ID, room_type, noofquests, check_in, check_out):
     import mysql.connector
     mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
     cursor = mycon.cursor()
-    cursor.execute("select * from member_info where member_id = '{}';".format(id))
+    cursor.execute("select * from member_info where member_id = '{}';".format(ID))
     data = cursor.fetchall()
     phone = data[0][1]
     name = data[0][3]
     cursor.execute("insert into requested_rooms(room_type,id,phonenumber,name,no_guests,check_in,check_out)"
                    "values('{}','{}','{}','{}',{},'{}','{}')"
-                   .format(room_type, id, phone, name, noofquests, check_in, check_out))
+                   .format(room_type, ID, phone, name, noofquests, check_in, check_out))
     mycon.commit()
-    pass
+    return
 
 
 # labels beside the button (design)
@@ -199,7 +389,7 @@ class MyLabel(Label):
     pass
 
 
-# Home Page
+# Home page
 class Home(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(Home, self).__init__(**kwargs)
@@ -259,7 +449,7 @@ class Home(Screen, FloatLayout):
     pass
 
 
-# Create Account Page
+# Create account screen (middle screen for Member signup screen)
 class Create(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(Create, self).__init__(**kwargs)
@@ -283,7 +473,7 @@ class Create(Screen, FloatLayout):
         self.add_widget(self.home)
 
     def call_home(self, instances):
-        sm.transition.direction = 'right'
+        sm.transition.direction = 'down'
         sm.current = 'Home'
 
     def call_createmember(self, instances):
@@ -292,7 +482,7 @@ class Create(Screen, FloatLayout):
     pass
 
 
-# Rooms
+# Rooms screen
 class Rooms(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(Rooms, self).__init__(**kwargs)
@@ -305,34 +495,21 @@ class Rooms(Screen, FloatLayout):
                            pos_hint={"x": 0.31, "top": 1})
         self.add_widget(self.label)
 
-        x = 0.2
+        x = [0.2, 0.35, 0.5, 0.65, 0.8]
         top = 0.75
         header_string = ['Room No.', 'Room Type', 'Available', 'Capacity', 'Price(¥)']
-        for header in header_string:
-            self.header = Label(text=header,
-                                font_size=40, color=(225, 225, 225, 1), size_hint=(0, 0),
-                                pos_hint={'x': x, 'top': top})
+        for i in range(0, len(header_string)):
+            self.header = Label(text=header_string[i], font_size=40, color=(225, 225, 225, 1), size_hint=(0, 0),
+                                pos_hint={'x': x[i], 'top': top})
             self.add_widget(self.header)
-            x += 0.15
 
         rooms = available_rooms()
+        x = [0.2, 0.35, 0.5, 0.65, 0.8]
         top = 0.7
-        for row in range(0, len(rooms)):
-            x = 0.05
-            room = str(rooms[row])
-            position = -1
-            for column in range(0, len(room)):
-                detail = ''
-                while column > position:
-                    for i in range(column, len(room)):
-                        position = i
-                        if room[i].isalpha() or room[i].isdigit():
-                            detail += str(room[i])
-                        else:
-                            break
-                    x += 0.045
-                self.room = MyLabel(text=detail, font_size=25, color=(225, 225, 225, 1),  size_hint=(.0, .0),
-                                    pos_hint={'x': x, 'top': top})
+        for room in rooms:
+            for i in range(0, len(room)):
+                self.room = Label(text=str(room[i]), font_size=25, color=(225, 225, 225, 1),  size_hint=(.0, .0),
+                                  pos_hint={'x': x[i], 'top': top})
                 self.add_widget(self.room)
             top -= .05
 
@@ -342,12 +519,54 @@ class Rooms(Screen, FloatLayout):
         self.add_widget(self.home)
 
     def call_home(self, instances):
-        sm.transition.direction = 'right'
+        sm.transition.direction = 'down'
         sm.current = 'Home'
     pass
 
 
-# Guest reservation
+# Booked rooms screen
+class BookedRooms(Screen, FloatLayout):
+    def __init__(self, **kwargs):
+        super(BookedRooms, self).__init__(**kwargs)
+
+        with self.canvas:
+            Color(1, 1, 0, 1)
+            self.rect = Rectangle(size=(3000, 2000))
+
+        self.label = Label(text="Booked Rooms", font_size=75, color=(225, 225, 225, 1), size_hint=(.4, .3),
+                           pos_hint={"x": 0.31, "top": 1})
+        self.add_widget(self.label)
+
+        x = [0.1, 0.175, 0.3, 0.45, 0.6, 0.75, 0.9]
+        top = 0.75
+        header_string = ['Room No.', 'ID', 'Phone Number', 'Email', 'Name', 'Check-in', 'Check-out']
+        for i in range(0, len(header_string)):
+            self.header = Label(text=header_string[i], font_size=40, color=(225, 225, 225, 1), size_hint=(0, 0),
+                                pos_hint={'x': x[i], 'top': top})
+            self.add_widget(self.header)
+
+        rooms = booked_rooms()
+        x = [0.1, 0.175, 0.3, 0.45, 0.6, 0.75, 0.9]
+        top = 0.7
+        for room in rooms:
+            for i in range(0, len(room)):
+                self.room = Label(text=str(room[i]), font_size=25, color=(225, 225, 225, 1),  size_hint=(.0, .0),
+                                  pos_hint={'x': x[i], 'top': top})
+                self.add_widget(self.room)
+            top -= .05
+
+        self.home = Button(text="Back", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
+                           size_hint=(.15, .025), pos_hint={"x": 0.01, "top": .99})
+        self.home.bind(on_release=self.call_home)
+        self.add_widget(self.home)
+
+    def call_home(self, instances):
+        sm.transition.direction = 'right'
+        sm.current = 'AdminConfirmation'
+    pass
+
+
+# Guest reservation screen
 class GuestReservation(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(GuestReservation, self).__init__(**kwargs)
@@ -413,6 +632,11 @@ class GuestReservation(Screen, FloatLayout):
         self.add_widget(self.submit)
 
     def call_home(self, instances):
+        self.nameofguest.text = ""
+        self.phoneofguest.text = ""
+        self.roomofguest.text = ""
+        self.checkinofguest.text = ""
+        self.checkoutofguest.text = ""
         sm.transition.direction = 'right'
         sm.current = 'Home'
 
@@ -423,11 +647,20 @@ class GuestReservation(Screen, FloatLayout):
         noofquests = self.noofguest.text
         check_in = self.checkinofguest.text
         check_out = self.checkoutofguest.text
-        request_room(name, phone, room_type, noofquests, check_in, check_out)
+        if name != "" and phone != "" and room_type != "" and noofquests != "" and check_in != "" and check_out != "":
+            request_room(name, phone, room_type, noofquests, check_in, check_out)
+            popup_valid_submission()
+        else:
+            popup_invalid_submission()
+        self.nameofguest.text = ""
+        self.phoneofguest.text = ""
+        self.roomofguest.text = ""
+        self.checkinofguest.text = ""
+        self.checkoutofguest.text = ""
     pass
 
 
-# Member login and reservation and signup
+# Member login screen
 class MemberLogin(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(MemberLogin, self).__init__(**kwargs)
@@ -441,17 +674,17 @@ class MemberLogin(Screen, FloatLayout):
         self.add_widget(self.label)
 
         self.id_label = MyLabel(text="Member ID", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                                pos_hint={"x": 0.15, "top": 0.8})
+                                pos_hint={"x": 0.15, "top": 0.65})
         self.add_widget(self.id_label)
         self.idofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                   pos_hint={"x": 0.5, "top": 0.8})
+                                   pos_hint={"x": 0.5, "top": 0.65})
         self.add_widget(self.idofguest)
 
         self.password_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                                      pos_hint={"x": 0.15, "top": 0.7})
+                                      pos_hint={"x": 0.15, "top": 0.55})
         self.add_widget(self.password_label)
-        self.passwordofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                         pos_hint={"x": 0.5, "top": 0.7})
+        self.passwordofguest = TextInput(multiline=False, password=True, font_size=40, size_hint=(.35, .05),
+                                         pos_hint={"x": 0.5, "top": 0.55})
         self.add_widget(self.passwordofguest)
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
@@ -465,16 +698,18 @@ class MemberLogin(Screen, FloatLayout):
         self.add_widget(self.memberregistration)
 
     def call_home(self, instances):
+        self.idofguest.text = ""
+        self.passwordofguest.text = ""
         sm.transition.direction = 'right'
         sm.current = 'Home'
 
     def call_memberreservation(self, instances):
-        id = self.idofguest.text
+        ID = self.idofguest.text
         password = self.passwordofguest.text
         memberinfo = member_info()
         state = ''
         for member in memberinfo:
-            if id in member and password in member:
+            if ID in member and password in member:
                 sm.transition.direction = 'left'
                 sm.current = 'MemberReservation'
                 state = 'correct'
@@ -483,9 +718,12 @@ class MemberLogin(Screen, FloatLayout):
                 state = 'incorrect'
         if state == 'incorrect':
             popup_incorrect()
+        self.idofguest.text = ""
+        self.passwordofguest.text = ""
     pass
 
 
+# Member reservation screen
 class MemberReservation(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(MemberReservation, self).__init__(**kwargs)
@@ -543,19 +781,34 @@ class MemberReservation(Screen, FloatLayout):
         self.add_widget(self.member_submit)
 
     def call_memberlogin(self, instances):
+        self.idofmember.text = ""
+        self.room.text = ""
+        self.noofguests.text = ""
+        self.checkin.text = ""
+        self.checkout.text = ""
         sm.transition.direction = 'right'
         sm.current = 'Home'
 
     def submit(self, instances):
-        id = self.idofmember.text
+        ID = self.idofmember.text
         room_type = self.room.text
         noofquests = self.noofguests.text
         check_in = self.checkin.text
         check_out = self.checkout.text
-        request_room_asmember(id, room_type, noofquests, check_in, check_out)
+        if ID != "" and room_type != "" and noofquests != "" and check_in != "" and check_out != "":
+            request_room_asmember(ID, room_type, noofquests, check_in, check_out)
+            popup_valid_submission()
+        else:
+            popup_invalid_submission()
+        self.idofmembert.text = ""
+        self.room.text = ""
+        self.noofguests.text = ""
+        self.checkin.text = ""
+        self.checkout.text = ""
     pass
 
 
+# Member signup screen
 class Createmember(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(Createmember, self).__init__(**kwargs)
@@ -593,9 +846,16 @@ class Createmember(Screen, FloatLayout):
         self.pass_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
                                   pos_hint={"x": 0.15, "top": 0.5})
         self.add_widget(self.pass_label)
-        self.passofmember = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+        self.passofmember = TextInput(multiline=False, password=True, font_size=40, size_hint=(.35, .05),
                                       pos_hint={"x": 0.5, "top": 0.5})
         self.add_widget(self.passofmember)
+
+        self.pass2_label = MyLabel(text="Confirm Password", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+                                   pos_hint={"x": 0.15, "top": 0.4})
+        self.add_widget(self.pass2_label)
+        self.pass2ofmember = TextInput(multiline=False, password=True, font_size=40, size_hint=(.35, .05),
+                                       pos_hint={"x": 0.5, "top": 0.4})
+        self.add_widget(self.pass2ofmember)
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
                            size_hint=(.15, .025), pos_hint={"x": 0.01, "top": .99})
@@ -608,6 +868,11 @@ class Createmember(Screen, FloatLayout):
         self.add_widget(self.submit)
 
     def call_home(self, instances):
+        self.nameofmember.text = ""
+        self.phoneofmember.text = ""
+        self.emailofmember.text = ""
+        self.passofmember.text = ""
+        self.pass2ofmember.text = ""
         sm.transition.direction = 'right'
         sm.current = 'Home'
 
@@ -616,29 +881,33 @@ class Createmember(Screen, FloatLayout):
         phone_number = self.phoneofmember.text
         email = self.emailofmember.text
         password = self.passofmember.text
+        password_check = self.pass2ofmember.text
         data = member_info()
         member_id = ''
         for member in data:
             member_id = member[0]
-        id = member_id[0]
+        ID = member_id[0]
         for i in range(1, 4):
             if int(member_id[i]) == 9:
-                id += str(int(member_id[i-1])+1)
+                ID += str(int(member_id[i-1])+1)
             elif int(member_id[i]) != 0:
-                id += str(int(member_id[i])+1)
+                ID += str(int(member_id[i])+1)
             else:
-                id += str(int(member_id[i]) + 0)
-        import mysql.connector
-        mycon = mysql.connector.connect(user='root', password='avishek2002', database='hotel_management')
-        cursor = mycon.cursor()
-        cursor.execute("insert into member_info(member_id,member_phonenumber,member_email,member_name,member_password,"
-                       "member_points) values('{}','{}','{}','{}','{}',{})"
-                       .format(id, phone_number, email, name, password, 0))
-        mycon.commit()
+                ID += str(int(member_id[i]) + 0)
+        if name != '' and phone_number != '' and email != '' and password != '' and password == password_check:
+            create_member(ID, phone_number, email, name, password)
+            popup_account_created()
+        else:
+            popup_account_notcreated()
+        self.nameofmember.text = ""
+        self.phoneofmember.text = ""
+        self.emailofmember.text = ""
+        self.passofmember.text = ""
+        self.pass2ofmember.text = ""
     pass
 
 
-# Admin Login
+# Admin login screen
 class AdminLogin(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(AdminLogin, self).__init__(**kwargs)
@@ -652,16 +921,17 @@ class AdminLogin(Screen, FloatLayout):
         self.add_widget(self.label)
 
         self.id_label = MyLabel(text="Admin ID", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                                pos_hint={"x": 0.15, "top": 0.8})
+                                pos_hint={"x": 0.15, "top": 0.65})
         self.add_widget(self.id_label)
-        self.idofadmin = TextInput(multiline=False, font_size=40, size_hint=(.35, .05), pos_hint={"x": 0.5, "top": 0.8})
+        self.idofadmin = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
+                                   pos_hint={"x": 0.5, "top": 0.65})
         self.add_widget(self.idofadmin)
 
         self.password_label = MyLabel(text="Password", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
-                                      pos_hint={"x": 0.15, "top": 0.7})
+                                      pos_hint={"x": 0.15, "top": 0.55})
         self.add_widget(self.password_label)
-        self.passwordofadmin = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
-                                         pos_hint={"x": 0.5, "top": 0.7})
+        self.passwordofadmin = TextInput(multiline=False, password=True, font_size=40, size_hint=(.35, .05),
+                                         pos_hint={"x": 0.5, "top": 0.55})
         self.add_widget(self.passwordofadmin)
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
@@ -675,16 +945,18 @@ class AdminLogin(Screen, FloatLayout):
         self.add_widget(self.adminconfirmation)
 
     def call_home(self, instances):
+        self.idofadmin.text = ""
+        self.passwordofadmin.text = ""
         sm.transition.direction = 'right'
         sm.current = 'Home'
 
     def call_adminconfirmation(self, instances):
-        id = self.idofadmin.text
+        ID = self.idofadmin.text
         password = self.passwordofadmin.text
         admininfo = admin_info()
         state = ''
         for admin in admininfo:
-            if id in admin and password in admin:
+            if ID in admin and password in admin:
                 sm.transition.direction = 'left'
                 sm.current = 'AdminConfirmation'
                 state = 'correct'
@@ -693,9 +965,12 @@ class AdminLogin(Screen, FloatLayout):
                 state = 'incorrect'
         if state == 'incorrect':
             popup_incorrect()
+        self.idofadmin.text = ""
+        self.passwordofadmin.text = ""
     pass
 
 
+# Admin room confirmation screen
 class AdminConfirmation(Screen, FloatLayout):
     def __init__(self, **kwargs):
         super(AdminConfirmation, self).__init__(**kwargs)
@@ -708,35 +983,52 @@ class AdminConfirmation(Screen, FloatLayout):
                            size_hint=(.4, .3), pos_hint={'x': 0.31, 'top': 1})
         self.add_widget(self.label)
 
-        x = 0.15
+        x = [0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85]
         top = 0.75
         header_string = ['Room Type', 'ID', 'Phone No.', 'Name', 'No. of guests', 'Check-in', 'Check-out', 'Approve']
-        for header in header_string:
-            self.header = Label(text=header, font_size=30, color=(225, 225, 225, 1), size_hint=(0, 0),
-                                pos_hint={'x': x, 'top': top})
+        for i in range(0, len(header_string)):
+            self.header = Label(text=header_string[i], font_size=30, color=(225, 225, 225, 1), size_hint=(0, 0),
+                                pos_hint={'x': x[i], 'top': top})
             self.add_widget(self.header)
-            x += 0.1
 
         requested = requested_rooms()
+        x = [0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85]
         top = 0.7
         for request in requested:
-            x = 0.15
-            for value in request:
-                detail = str(value)
-                self.value = MyLabel(text=detail, font_size=25, color=(225, 225, 225, 1), size_hint=(.0, .0),
-                                     pos_hint={'x': x, 'top': top})
+            for i in range(0, len(request)):
+                self.value = MyLabel(text=str(request[i]), font_size=25, color=(225, 225, 225, 1), size_hint=(.0, .0),
+                                     pos_hint={'x': x[i], 'top': top})
                 self.add_widget(self.value)
-                x += 0.1
+            self.check = CheckBox(size_hint=(.02, .02), pos_hint={'x': x[7], 'top': top + 0.01}, active=False)
+            self.add_widget(self.check)
+
             top -= 0.05
+
+        self.submit = Button(text="Confirm reservation", font_size=40, background_color=(0, 225, 225, 1),
+                             color=(225, 225, 225, 1), size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+        self.submit.bind(on_release=self.call_confirm)
+        self.add_widget(self.submit)
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1),
                            color=(225, 225, 225, 1), size_hint=(.15, .025), pos_hint={"x": 0.01, "top": 0.99})
         self.home.bind(on_release=self.call_home)
         self.add_widget(self.home)
 
+        self.view = Button(text="Booked rooms", font_size=25, background_color=(0, 225, 225, 1),
+                           color=(225, 225, 225, 1), size_hint=(.15, .025), pos_hint={"x": 0.81, "top": 0.99})
+        self.view.bind(on_release=self.call_booked)
+        self.add_widget(self.view)
+
     def call_home(self, instances):
         sm.transition.direction = 'right'
         sm.current = 'Home'
+
+    def call_booked(self, instances):
+        sm.transition.direction = 'left'
+        sm.current = 'BookedRooms'
+
+    def call_confirm(self, instances):
+        popup_confirm()
     pass
 
 
@@ -745,6 +1037,7 @@ sm = ScreenManager()
 sm.add_widget(Home(name='Home'))
 sm.add_widget(Create(name='Create'))
 sm.add_widget(Rooms(name='Rooms'))
+sm.add_widget(BookedRooms(name='BookedRooms'))
 sm.add_widget(GuestReservation(name='GuestReservation'))
 sm.add_widget(MemberLogin(name='MemberLogin'))
 sm.add_widget(MemberReservation(name='MemberReservation'))
