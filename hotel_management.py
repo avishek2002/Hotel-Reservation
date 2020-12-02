@@ -1,20 +1,17 @@
-import kivy
-import time
 import mysql.connector as connector
 from datetime import datetime
-from kivy.base import runTouchApp
 from kivy.app import App
-from kivy.uix.checkbox import CheckBox
-from kivy.properties import ObjectProperty
-from kivy.uix.label import Label
-# from kivy.uix.gridlayout import GridLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scrollview import ScrollView
+from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.graphics import Color, Rectangle
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.popup import Popup
+from kivy.uix.checkbox import CheckBox
 from kivy.uix.dropdown import DropDown
 
 
@@ -864,15 +861,30 @@ class Rooms(Screen, FloatLayout):
                                 pos_hint={'x': x[i], 'top': top})
             self.add_widget(self.header)
 
+        self.layout = GridLayout(cols=5, spacing=40, size_hint_y=None)
+        self.layout.bind(minimum_height=self.layout.setter('height'))
         rooms = available_rooms()
         x = [0.2, 0.35, 0.5, 0.65, 0.8]
-        top = 0.7
+        top = 0.8
+        def lining():
+            for i in range(0,5):
+                self.room = Label(text="", font_size=25, color=(225, 225, 225, 1),
+                                  pos_hint={'x': x[i], 'top': top})
+                self.layout.add_widget(self.room)
+            return
+        lining()
         for room in rooms:
             for i in range(0, len(room)):
-                self.room = Label(text=str(room[i]), font_size=25, color=(225, 225, 225, 1),  size_hint=(.0, .0),
+                self.room = Label(text=str(room[i]), font_size=25, color=(225, 225, 225, 1),
                                   pos_hint={'x': x[i], 'top': top})
-                self.add_widget(self.room)
+                self.layout.add_widget(self.room)
             top -= .05
+        lining()
+        self.root = ScrollView(size_hint=(None, None), size=(Window.width * .75, Window.height * .6),
+                               pos_hint={"x": 0.125, 'top': 0.675})
+        self.root.add_widget(self.layout)
+        self.add_widget(self.root)
+
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
                            size_hint=(.15, .025), pos_hint={"x": 0.01, "top": .99})
@@ -1026,10 +1038,9 @@ class GuestReservation(Screen, FloatLayout):
         self.phone_label = Label(text="Phone Number", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
                                  pos_hint={"x": 0.15, "top": 0.7})
         self.add_widget(self.phone_label)
-        self.phoneofguest = TextInput(text="xxx-xxxx-xxxx", multiline=False, font_size=40, size_hint=(.35, .05),
+        self.phoneofguest = TextInput(multiline=False, font_size=40, size_hint=(.35, .05),
                                       pos_hint={"x": 0.5, "top": 0.7})
         self.add_widget(self.phoneofguest)
-        # self.phoneofguest.bind(on_focus=self.phoneofguest.clear())
 
         room_type = room_types()
         self.room_label = Label(text="Room Type", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
@@ -1557,7 +1568,7 @@ class AdminConfirmation(Screen, FloatLayout):
                            size_hint=(.4, .1), pos_hint={'x': 0.31, 'top': 0.875})
         self.add_widget(self.label)
 
-        x = [0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85]
+        x = [0.15, 0.25, 0.335, 0.45, 0.55, 0.65, 0.75, 0.85]
         top = 0.75
         header_string = ['Room Type', 'ID', 'Phone No.', 'Name', 'No. of guests', 'Check-in', 'Check-out', 'Approve']
         for i in range(0, len(header_string)):
@@ -1567,7 +1578,7 @@ class AdminConfirmation(Screen, FloatLayout):
 
         requested = requested_rooms()
         self.checkref = {}
-        x = [0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85]
+        x = [0.15, 0.25, 0.335, 0.465, 0.55, 0.65, 0.75, 0.85]
         top = 0.7
         for request in requested:
             for i in range(0, len(request)):
