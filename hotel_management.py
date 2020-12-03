@@ -1,5 +1,5 @@
 import mysql.connector as connector
-from datetime import datetime
+from datetime import datetime, date
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
@@ -48,7 +48,6 @@ def mysql():
         cursor.execute('alter table member_info add(member_email varchar(50) not null);')
         cursor.execute('alter table member_info add(member_name varchar(25) not null);')
         cursor.execute('alter table member_info add(member_password varchar(25) not null);')
-        cursor.execute('alter table member_info add(member_points int(5) not null);')
 
         cursor.execute('create table rooms (room_no varchar(5) primary key not null);')
         cursor.execute("alter table rooms add(room_type varchar(25) not null);")
@@ -866,8 +865,9 @@ class Rooms(Screen, FloatLayout):
         rooms = available_rooms()
         x = [0.2, 0.35, 0.5, 0.65, 0.8]
         top = 0.8
+
         def lining():
-            for i in range(0,5):
+            for i in range(0, 5):
                 self.room = Label(text="", font_size=25, color=(225, 225, 225, 1),
                                   pos_hint={'x': x[i], 'top': top})
                 self.layout.add_widget(self.room)
@@ -884,7 +884,6 @@ class Rooms(Screen, FloatLayout):
                                pos_hint={"x": 0.125, 'top': 0.675})
         self.root.add_widget(self.layout)
         self.add_widget(self.root)
-
 
         self.home = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
                            size_hint=(.15, .025), pos_hint={"x": 0.01, "top": .99})
@@ -1115,8 +1114,16 @@ class GuestReservation(Screen, FloatLayout):
         noofquests = self.noofguest.text
         check_in = self.checkinofguest.text
         check_out = self.checkoutofguest.text
-        if name != "" and phone != "" and room_type != "Select" and noofquests != "Select" and check_in != "" and\
-                check_out != "":
+        phoneCheck = ''
+        for i in range(0, len(phone)):
+            if phone[i] == "-":
+                phoneCheck = phoneCheck
+            else:
+                phoneCheck += phone[i]
+                continue
+        today = date.today()
+        if name != "" and phoneCheck.isnumeric() and room_type != "Select" and noofquests != "Select" and\
+                check_in > str(today) and check_out > str(today) and check_out > check_in:
             request_room(name, phone, room_type, noofquests, check_in, check_out)
             self.parent.get_screen('AdminConfirmation').__init__()
             popup_valid_submission()
@@ -1302,7 +1309,9 @@ class MemberReservation(Screen, FloatLayout):
         noofquests = self.noofguests.text
         check_in = self.checkin.text
         check_out = self.checkout.text
-        if ID != "" and room_type != "Select" and noofquests != "Select" and check_in != "" and check_out != "":
+        today = date.today()
+        if ID != "" and room_type != "Select" and noofquests != "Select" and check_in > str(today) and\
+                check_out > str(today) and check_out > check_in:
             request_room_asmember(ID, room_type, noofquests, check_in, check_out)
             self.parent.get_screen('AdminConfirmation').__init__()
             popup_valid_submission()
@@ -1393,18 +1402,26 @@ class Createmember(Screen, FloatLayout):
 
     def call_create_member(self, instances):
         name = self.nameofmember.text
-        phone_number = self.phoneofmember.text
+        phone = self.phoneofmember.text
         email = self.emailofmember.text
         password = self.passofmember.text
         password_check = self.pass2ofmember.text
         ID = makememberid()
+        phoneCheck = ''
+        for i in range(0, len(phone)):
+            if phone[i] == "-":
+                phoneCheck = phoneCheck
+            else:
+                phoneCheck += phone[i]
+                continue
         mail_list = ['@gmail.com', '@yahoo.com', '@hotmail.com', '@aol.com', '@msn.com', '@icloud.com']
         if '@' in email:
             mail = email[email.index('@'):len(email)+1]
         else:
             mail = email
-        if name != '' and phone_number != '' and mail in mail_list and password != '' and password == password_check:
-            create_member(ID, phone_number, email, name, password)
+        if name != '' and phoneCheck.isnumeric() and mail in mail_list and password != '' and\
+                password == password_check:
+            create_member(ID, phone, email, name, password)
             popup_account_created()
         else:
             popup_account_notcreated()
@@ -1751,12 +1768,19 @@ class NewAdmin(Screen, FloatLayout):
         password = self.password.text
         pass2 = self.pass2.text
         id_ = makeid()
+        phoneCheck = ''
+        for i in range(0, len(phone)):
+            if phone[i] == '-':
+                phoneCheck = phoneCheck
+            else:
+                phoneCheck += phone[i]
+                continue
         mail_list = ['@gmail.com', '@yahoo.com', '@hotmail.com', '@aol.com', '@msn.com', '@icloud.com']
         if '@' in email:
             mail = email[email.index('@'):len(email) + 1]
         else:
             mail = email
-        if name != '' and phone != '' and mail in mail_list and password != '' and password == pass2:
+        if name != '' and phoneCheck.isnumeric() and mail in mail_list and password != '' and password == pass2:
             create_admin(id_, phone, email, name, password)
             popup_account_created()
         else:
