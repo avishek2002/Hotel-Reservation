@@ -156,7 +156,8 @@ def popup_incorrect():
             super(popup_incorrect_screen, self).__init__(**kwargs)
 
             self.label = Label(text="ID or Password is incorrect!", font_size=50, color=(1, 0, 0, 1),
-                               size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+                               size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75}, text_size=(600, None),
+                               halign="center")
             self.add_widget(self.label)
 
             self.back = Button(text="Try Again", font_size=25, background_color=(0, 225, 225, 1),
@@ -187,12 +188,13 @@ def popup_invalid_submission():
             super(popup_invalid_screen, self).__init__(**kwargs)
 
             self.label = Label(text="The text boxes must not be left empty and must be in correct format!",
-                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75},
+                               text_size=(600, None), halign="center")
             self.add_widget(self.label)
 
             self.back = Button(text="Re-try submitting form", font_size=25, background_color=(0, 225, 225, 1),
                                color=(225, 225, 225, 1),
-                               size_hint=(.4, .15), pos_hint={"x": 0.3, "top": 0.3})
+                               size_hint=(.42, .15), pos_hint={"x": 0.3, "top": 0.3})
             self.back.bind(on_release=self.call_back)
             self.add_widget(self.back)
 
@@ -217,8 +219,9 @@ def popup_valid_submission():
         def __init__(self, **kwargs):
             super(popup_valid_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Successfully sent request for room reservation!",
-                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.label = Label(text="Successfully sent request for room reservation!", text_size=(600, None),
+                               halign="center", font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2),
+                               pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
             self.back = Button(text="Return to Home Screen", font_size=25, background_color=(0, 225, 225, 1),
@@ -249,8 +252,9 @@ def popup_confirm():
         def __init__(self, **kwargs):
             super(popup_confirm_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Confirmed reservations for the selected rooms!",
-                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.label = Label(text="Confirmed reservations for the selected rooms!", text_size=(600, None),
+                               halign="center", font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2),
+                               pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
             self.back = Button(text="Return to your Page", font_size=25, background_color=(0, 225, 225, 1),
@@ -280,8 +284,9 @@ def popup_confirm_delete():
         def __init__(self, **kwargs):
             super(popup_confirm_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Deleted reservations for the selected rooms!",
-                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.label = Label(text="Deleted reservations for the selected rooms!", text_size=(600, None),
+                               halign="center", font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2),
+                               pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
             self.back = Button(text="Return to your Page", font_size=25, background_color=(0, 225, 225, 1),
@@ -386,8 +391,9 @@ def popup_account_created():
         def __init__(self, **kwargs):
             super(account_created_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Your Account has been successfully created!",
-                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.label = Label(text="Your Account has been successfully created!", text_size=(600, None),
+                               halign="center", font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2),
+                               pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
             self.back = Button(text="Home", font_size=25, background_color=(0, 225, 225, 1),
@@ -419,7 +425,7 @@ def popup_account_notcreated():
         def __init__(self, **kwargs):
             super(account_notcreated_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Your Account could not be processed!",
+            self.label = Label(text="Your Account could not be processed!", text_size=(600, None), halign="center",
                                font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
@@ -450,7 +456,7 @@ def popup_member_delete():
         def __init__(self, **kwargs):
             super(member_delete_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Your Account has been deleted!",
+            self.label = Label(text="Your Account has been deleted!", text_size=(600, None), halign="center",
                                font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
@@ -482,7 +488,7 @@ def popup_member_delete_failure():
         def __init__(self, **kwargs):
             super(member_delete_failure_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Your Account could not deleted!",
+            self.label = Label(text="Your Account could not deleted!", text_size=(600, None), halign="center",
                                font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
@@ -513,8 +519,9 @@ def popup_confirm_admindelete():
         def __init__(self, **kwargs):
             super(admin_delete_confirmation_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Are you sure you want to delete this Admin Account!",
-                               font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
+            self.label = Label(text="Are you sure you want to delete this Admin Account!", text_size=(600, None),
+                               halign="center", font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2),
+                               pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
             self.back = Button(text="Cancel", font_size=25, background_color=(0, 225, 225, 1),
@@ -563,7 +570,7 @@ def popup_room_created():
         def __init__(self, **kwargs):
             super(room_created_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Room Created!",
+            self.label = Label(text="Room Created!", halign="center", text_size=(600, None),
                                font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
@@ -596,7 +603,7 @@ def popup_room_notcreated():
         def __init__(self, **kwargs):
             super(room_notcreated_screen, self).__init__(**kwargs)
 
-            self.label = Label(text="Room could not be created!",
+            self.label = Label(text="Room could not be created!", halign="center", text_size=(600, None),
                                font_size=50, color=(1, 0, 0, 1), size_hint=(.4, .2), pos_hint={"x": 0.3, "top": .75})
             self.add_widget(self.label)
 
