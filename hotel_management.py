@@ -1,3 +1,4 @@
+import random
 import mysql.connector as connector
 from datetime import datetime, date
 from kivy.app import App
@@ -93,7 +94,6 @@ cursor = mycon.cursor()
 
 # getting available rooms
 def available_rooms():
-    cursor.execute('use hotel_management;')
     cursor.execute("select * from rooms;")
     rooms = cursor.fetchall()
     return rooms
@@ -101,7 +101,6 @@ def available_rooms():
 
 # getting requested rooms
 def requested_rooms():
-    cursor.execute('use hotel_management;')
     cursor.execute("select * from requested_rooms;")
     rooms = cursor.fetchall()
     return rooms
@@ -109,7 +108,6 @@ def requested_rooms():
 
 # getting booked rooms
 def booked_rooms():
-    cursor.execute('use hotel_management;')
     cursor.execute("select * from booked_rooms;")
     rooms = cursor.fetchall()
     return rooms
@@ -117,7 +115,6 @@ def booked_rooms():
 
 # getting checked in rooms
 def checked_rooms():
-    cursor.execute('use hotel_management;')
     cursor.execute("select * from checked_in;")
     rooms = cursor.fetchall()
     return rooms
@@ -125,7 +122,6 @@ def checked_rooms():
 
 # getting room type
 def room_types():
-    cursor.execute('use hotel_management;')
     cursor.execute("select distinct(room_type) from rooms;")
     room_type = cursor.fetchall()
     return room_type
@@ -133,7 +129,6 @@ def room_types():
 
 # getting admin information
 def admin_info():
-    cursor.execute('use hotel_management;')
     cursor.execute("select * from admin_info;")
     data = cursor.fetchall()
     return data
@@ -141,7 +136,6 @@ def admin_info():
 
 # getting member information
 def member_info():
-    cursor.execute('use hotel_management;')
     cursor.execute("select * from member_info;")
     data = cursor.fetchall()
     return data
@@ -310,22 +304,20 @@ def popup_confirm_delete():
 
 # generating admin id
 def makeid():
-    data = admin_info()
+    cursor.execute('select admin_id from admin_info;')
+    data = cursor.fetchall()
     if data != "":
-        admin_id = ''
-        for admin in data:
-            admin_id = admin[0]
-        id_ = admin_id[0]
-        for i in range(1, 4):
-            if int(admin_id[i]) == 9:
-                id_ += str(int(admin_id[i - 1]) + 1)
-            elif int(admin_id[i]) != 0:
-                id_ += str(int(admin_id[i]) + 1)
+        ID = 'A'
+        while True:
+            for i in range(0, 3):
+                ID += str(random.randrange(0, 10))
+            if ID not in data:
+                break
             else:
-                id_ += str(int(admin_id[i]) + 0)
+                continue
     else:
-        id_ = "A001"
-    return id_
+        ID = "A001"
+    return ID
 
 
 # creating admin acoount
@@ -345,19 +337,17 @@ def adminaccountdelete(admin_identifier):
 
 # generating member id
 def makememberid():
-    data = member_info()
+    cursor.execute('select member_id from member_info;')
+    data = cursor.fetchall()
     if data != "":
-        member_id = ''
-        for member in data:
-            member_id = member[0]
-        ID = member_id[0]
-        for i in range(1, 4):
-            if int(member_id[i]) == 9:
-                ID += str(int(member_id[i - 1]) + 1)
-            elif int(member_id[i]) != 0:
-                ID += str(int(member_id[i]) + 1)
+        ID = 'M'
+        while True:
+            for i in range(0,3):
+                ID += str(random.randrange(0,10))
+            if ID not in data:
+                break
             else:
-                ID += str(int(member_id[i]) + 0)
+                continue
     else:
         ID = "M001"
     return ID
@@ -975,16 +965,16 @@ class CheckedInRooms(Screen, FloatLayout):
                            pos_hint={"x": 0.31, "top": 1})
         self.add_widget(self.label)
 
-        x = [0.2, 0.35, 0.5, 0.65, 0.8]
+        x = [0.1, 0.25, 0.4, 0.55, 0.7, 0.9]
         top = 0.75
-        header_string = ['Room No.', 'ID', 'Name', 'Checked-in', 'Check-out']
+        header_string = ['Room No.', 'ID', 'Name', 'Checked-in', 'Check-out', 'Current Cost(¥)']
         for i in range(0, len(header_string)):
             self.header = Label(text=header_string[i], font_size=40, color=(225, 225, 225, 1), size_hint=(0, 0),
                                 pos_hint={'x': x[i], 'top': top})
             self.add_widget(self.header)
 
         rooms = checked_rooms()
-        x = [0.2, 0.35, 0.5, 0.65, 0.8, 0.85]
+        x = [0.1, 0.25, 0.4, 0.55, 0.7, 0.8]
         top = 0.7
         self.checkref = {}
         for room in rooms:
@@ -995,12 +985,24 @@ class CheckedInRooms(Screen, FloatLayout):
             self.check = CheckBox(size_hint=(.02, .02), pos_hint={'x': x[5], 'top': top + 0.01}, active=False)
             self.add_widget(self.check)
             self.checkref[room[2]] = self.check
+            cursor.execute("select room_price from rooms where room_no='{}'".format(room[0]))
+            price = cursor.fetchone()
+            days_stayed = (date.today() - room[3]).days
+            curr_cost = days_stayed * price[0]
+            self.cost = Label(text=str(curr_cost), font_size=25, color=(225, 225, 225, 1), size_hint=(.0, .0),
+                              pos_hint={'x': 0.9, 'top': top})
+            self.add_widget(self.cost)
             top -= 0.05
 
         self.home = Button(text="Back", font_size=25, background_color=(0, 225, 225, 1), color=(225, 225, 225, 1),
                            size_hint=(.15, .025), pos_hint={"x": 0.01, "top": .99})
         self.home.bind(on_release=self.call_home)
         self.add_widget(self.home)
+
+        self.refresh = Button(text="Refresh Page", font_size=35, background_color=(0, 225, 225, 1),
+                              color=(225, 225, 225, 1), size_hint=(.2, .05), pos_hint={"x": 0.76, "top": .1})
+        self.refresh.bind(on_release=self.call_refresh)
+        self.add_widget(self.refresh)
 
         self.submit = Button(text="Checked Out Now", font_size=40, background_color=(0, 225, 225, 1),
                              color=(225, 225, 225, 1), size_hint=(.4, .1), pos_hint={"x": 0.3, "top": 0.125})
@@ -1010,6 +1012,9 @@ class CheckedInRooms(Screen, FloatLayout):
     def call_home(self, instances):
         sm.transition.direction = 'right'
         sm.current = 'AdminConfirmation'
+
+    def call_refresh(self, instances):
+        self.parent.get_screen('CheckedInRooms').__init__()
 
     def call_confirm(self, instances):
         for idx, wgt in self.checkref.items():
