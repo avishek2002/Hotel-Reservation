@@ -356,8 +356,8 @@ def makememberid():
 # creating member account
 def create_member(ID, phone_number, email, name, password):
     cursor.execute("insert into member_info(member_id,member_phonenumber,member_email,member_name,"
-                   "member_password, member_points) values('{}','{}','{}','{}','{}',{})"
-                   .format(ID, phone_number, email, name, password, 0))
+                   "member_password) values('{}','{}','{}','{}','{}')"
+                   .format(ID, phone_number, email, name, password))
     mycon.commit()
     return
 
@@ -1217,6 +1217,7 @@ class MemberLogin(Screen, FloatLayout):
 
 
 member_identifier = ""
+mID = ''
 
 
 # Member reservation screen
@@ -1236,8 +1237,8 @@ class MemberReservation(Screen, FloatLayout):
         self.id_label = Label(text="Member ID", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
                               pos_hint={"x": 0.15, "top": 0.8})
         self.add_widget(self.id_label)
-        self.idofmember = TextInput(text=member_identifier, multiline=False, font_size=40, size_hint=(.35, .05),
-                                    pos_hint={"x": 0.5, "top": 0.8})
+        self.idofmember = Label(text=member_identifier, color=(225, 225, 225, 1), font_size=40, size_hint=(.35, .05),
+                                pos_hint={"x": 0.5, "top": 0.8})
         self.add_widget(self.idofmember)
 
         room_type = room_types()
@@ -1316,7 +1317,7 @@ class MemberReservation(Screen, FloatLayout):
         sm.current = 'MemberDelete'
 
     def submit(self, instances):
-        ID = self.idofmember.text
+        ID = member_identifier
         room_type = self.room.text
         noofquests = self.noofguests.text
         check_in = self.checkin.text
@@ -1385,11 +1386,12 @@ class Createmember(Screen, FloatLayout):
                                        pos_hint={"x": 0.5, "top": 0.4})
         self.add_widget(self.pass2ofmember)
 
-        ID = makememberid()
+        global mID
+        mID = makememberid()
         self.id_label = Label(text="Your ID will be", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
                               pos_hint={"x": 0.15, "top": 0.3})
         self.add_widget(self.id_label)
-        self.id_value = Label(text=ID, font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
+        self.id_value = Label(text=mID, font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
                               pos_hint={"x": 0.5, "top": 0.3})
         self.add_widget(self.id_value)
 
@@ -1418,7 +1420,7 @@ class Createmember(Screen, FloatLayout):
         email = self.emailofmember.text
         password = self.passofmember.text
         password_check = self.pass2ofmember.text
-        ID = makememberid()
+        global mID
         phoneCheck = ''
         for i in range(0, len(phone)):
             if phone[i] == "-":
@@ -1433,7 +1435,8 @@ class Createmember(Screen, FloatLayout):
             mail = email
         if name != '' and phoneCheck.isnumeric() and mail in mail_list and password != '' and\
                 password == password_check:
-            create_member(ID, phone, email, name, password)
+            create_member(mID, phone, email, name, password)
+            self.parent.get_screen('Createmember').__init__()
             popup_account_created()
         else:
             popup_account_notcreated()
@@ -1578,6 +1581,7 @@ class AdminLogin(Screen, FloatLayout):
 
 
 admin_identifier = ""
+id_ = ''
 
 
 # Admin room confirmation screen
@@ -1746,6 +1750,7 @@ class NewAdmin(Screen, FloatLayout):
                                pos_hint={"x": 0.5, "top": 0.4})
         self.add_widget(self.pass2)
 
+        global id_
         id_ = makeid()
         self.id_label = Label(text="Your ID will be", font_size=40, color=(225, 225, 1, 1), size_hint=(.35, .05),
                               pos_hint={"x": 0.15, "top": 0.3})
@@ -1779,7 +1784,7 @@ class NewAdmin(Screen, FloatLayout):
         name = self.name_.text
         password = self.password.text
         pass2 = self.pass2.text
-        id_ = makeid()
+        global id_
         phoneCheck = ''
         for i in range(0, len(phone)):
             if phone[i] == '-':
@@ -1794,6 +1799,7 @@ class NewAdmin(Screen, FloatLayout):
             mail = email
         if name != '' and phoneCheck.isnumeric() and mail in mail_list and password != '' and password == pass2:
             create_admin(id_, phone, email, name, password)
+            self.parent.get_screen('NewAdmin').__init__()
             popup_account_created()
         else:
             popup_account_notcreated()
