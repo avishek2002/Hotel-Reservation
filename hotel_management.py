@@ -23,7 +23,7 @@ from kivy.uix.dropdown import DropDown
 
 # creating database if not exists
 def mysql():
-    mycon = connector.connect(user='root', password='avishek2002')
+    mycon = connector.connect(user='root', password='*****')
     cursor = mycon.cursor()
     cursor.execute('show databases;')
     databases = cursor.fetchall()
@@ -88,7 +88,7 @@ def mysql():
 mysql()
 
 
-mycon = connector.connect(user='root', password='avishek2002', database='hotel_management')
+mycon = connector.connect(user='root', password='*****', database='hotel_management')
 cursor = mycon.cursor()
 
 
